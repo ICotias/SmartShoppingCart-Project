@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 import { ListTab } from "@/components/ListTab";
 import { Spacing } from "@/components/Spacing";
-import { ListHeader } from "@/components/ListHeader";
 import { ItemStorage } from "@/storage/itensStorage";
+import { ListHeader } from "@/components/ListHeader";
 import { FilterStatus } from "@/@types/filterStatus";
 import { itensStorage } from "@/storage/itensStorage";
 import { View, Image, FlatList, Text, Alert } from "react-native";
+import { AppLogo } from "@/assets/AppLogo";
+import { AddIcon } from "@/assets/AddIcon";
 
 export function Home() {
   //Estado que define qual lista está em foco
@@ -110,21 +112,17 @@ export function Home() {
     <>
       <View style={styles.container}>
         <View style={styles.topContainer}>
-          <Image source={require("@/assets/logo.png")} style={styles.logo} />
-          <Spacing size="logo" />
-          <Input onChangeText={setProductName} value={productName} />
-          <Spacing size="sm" />
-          <Button onPress={handleAddProducts} />
+          <AppLogo width={50} height={50} />
+          <Text style={styles.title}>Smart{"\n"}ShoppingCart</Text>
+          <Button
+            onPress={handleAddProducts}
+            variant="addButton"
+            content={<AddIcon color="white" width={24} height={24} />}
+          />
         </View>
 
-        <Spacing size="xl" />
-
         <View style={styles.bottomContainer}>
-          <ListHeader
-            focused={focused}
-            onSelect={handleChangeStatus}
-            onClear={handleClear}
-          />
+          <Text style={styles.listTitle}>Minhas Listas</Text>
           <FlatList
             data={productsList}
             keyExtractor={(item) => item.id}

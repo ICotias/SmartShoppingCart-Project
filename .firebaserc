@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "smartshoppingcart-dev",
+    "production": "smartshoppingcart-prod"
+  }
+}
