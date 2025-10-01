@@ -27,5 +27,6 @@ export const styles = StyleSheet.create({
     textList:{
         fontSize:10,
     },
+    textBought:{},
 
 })

@@ -1,0 +1,14 @@
+{
+    "data": [
+        {
+            "id": 1,
+            "name": "Lista 1",
+            "products": [
+                {
+                    "id": 1,
+                    "name": "Produto 1"
+                }
+            ]
+        }
+    ]
+}

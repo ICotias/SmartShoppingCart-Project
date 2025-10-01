@@ -31,7 +31,7 @@ export function ListHeader({ focused, onSelect, onClear }: ListHeaderProps) {
                     { opacity: focused === FilterStatus.PENDING ? 1 : 0.5 },
                   ]}
                 >
-                  Pendentes
+                  Itens a pegar
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -49,7 +49,7 @@ export function ListHeader({ focused, onSelect, onClear }: ListHeaderProps) {
                     { opacity: focused === FilterStatus.BOUGHT ? 1 : 0.5 },
                   ]}
                 >
-                  Comprados
+                  Itens no carrinho
                 </Text>
               </TouchableOpacity>
             </View>

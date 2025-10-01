@@ -17,7 +17,7 @@ export const styles = StyleSheet.create({
         justifyContent:"center",
         alignItems:"center",
         width:"100%",
-        height:50,
+        height:55,
         padding:15,},
 
     blueButtonText:{

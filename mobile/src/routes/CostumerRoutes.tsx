@@ -4,9 +4,11 @@ import {
 } from "@react-navigation/native-stack";
 
 import { Home } from "@/app/Costumer/Home";
+import { ShoppingList } from "@/app/Costumer/ShoppingList";
 
 export type CostumerRoutesList = {
   home: undefined;
+  shoppinglist: { listName: string };
 };
 
 export type CostumerRoutesProps<T extends keyof CostumerRoutesList> =
@@ -17,10 +19,11 @@ const Stack = createNativeStackNavigator<CostumerRoutesList>();
 export function CostumerRoutes() {
   return (
     <Stack.Navigator
-      initialRouteName="home"
       screenOptions={{ headerShown: false }}
+      initialRouteName="home"
     >
       <Stack.Screen name="home" component={Home} />
+      <Stack.Screen name="shoppinglist" component={ShoppingList} />
     </Stack.Navigator>
   );
 }
