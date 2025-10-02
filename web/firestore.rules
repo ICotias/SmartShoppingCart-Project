@@ -1,0 +1,24 @@
+// firestore.rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    // Listas no nível raiz (shoppingLists)
+    match /shoppingLists/{listId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId)
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0;
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    // Itens no nível raiz (items) vinculados via listId
+    match /items/{itemId} {
+      allow read, create, update, delete: if isSignedIn()
+        && exists(/databases/$(database)/documents/shoppingLists/$(request.resource.data.listId))
+        && get(/databases/$(database)/documents/shoppingLists/$(request.resource.data.listId)).data.userId == request.auth.uid;
+    }
+  }
+}
