@@ -19,7 +19,7 @@ const Stack = createNativeStackNavigator<AuthRoutesList>();
 export function AuthRoutes() {
   return (
     <Stack.Navigator
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, animation: "fade" }}
       initialRouteName="signin"
     >
       <Stack.Screen name="signin" component={SignIn} />

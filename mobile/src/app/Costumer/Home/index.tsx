@@ -1,77 +1,102 @@
-import { styles } from './styles'
-import { Input } from '@/components/Input'
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/Button'
-import { Spacing } from '@/components/Spacing'
-import { UserBox } from '@/components/UserBox'
-import { View, FlatList, Text, Alert, Modal } from 'react-native'
-import { AppLogo } from '@/assets/AppLogo'
-import { AddIcon } from '@/assets/AddIcon'
-import { CostumerRoutesProps } from '@/routes/CostumerRoutes'
-import { ShoppingList, useShoppingList } from '@/contexts/ShoppingList'
+import { styles } from "./styles";
+import { Input } from "@/components/Input";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/Button";
+import { Spacing } from "@/components/Spacing";
+import { UserBox } from "@/components/UserBox";
+import {
+  View,
+  FlatList,
+  Text,
+  Alert,
+  Modal,
+  TouchableOpacity,
+} from "react-native";
+import { AppLogo } from "@/assets/AppLogo";
+import { AddIcon } from "@/assets/AddIcon";
+import { CostumerRoutesProps } from "@/routes/CostumerRoutes";
+import { useShoppingList } from "@/contexts/ShoppingList";
+import { FirebaseShoppingList } from "@/services/firebaseService";
+import { useAuth } from "@/contexts/AuthContext";
 
-export function Home({ navigation }: CostumerRoutesProps<'home'>) {
-  const { shoppingLists, addShoppingList } = useShoppingList()
-  const [showAddListModal, setShowAddListModal] = useState(false)
-  const [newListName, setNewListName] = useState('')
+export function Home({ navigation }: CostumerRoutesProps<"home">) {
+  const { shoppingLists, addShoppingList, loading } = useShoppingList();
+  const [showAddListModal, setShowAddListModal] = useState(false);
+  const [newListName, setNewListName] = useState("");
+  const [isAddingList, setIsAddingList] = useState(false);
+  const { logout } = useAuth();
 
   function handleOpenAddListModal() {
-    setShowAddListModal(true)
-    setNewListName('')
+    setShowAddListModal(true);
+    setNewListName("");
   }
 
-  function handleAddNewList() {
-    console.log('shoppingLists', shoppingLists)
-    console.log('newListName', newListName)
+  async function handleAddNewList() {
     if (!newListName.trim()) {
       return Alert.alert(
-        'Adicionar',
-        'Não é permitido a adição de valores vazios'
-      )
+        "Adicionar",
+        "Não é permitido a adição de valores vazios"
+      );
     }
 
     const existingList = shoppingLists?.find(
       (list) => list.name.toLowerCase() === newListName.toLowerCase()
-    )
+    );
 
     if (existingList) {
-      return Alert.alert('Lista já existe', 'Já existe uma lista com este nome')
+      return Alert.alert(
+        "Lista já existe",
+        "Já existe uma lista com este nome"
+      );
     }
 
-    const newList: ShoppingList = {
-      id: Date.now().toString(),
-      name: newListName,
-      products: [],
+    setIsAddingList(true);
+    try {
+      await addShoppingList(newListName);
+      setNewListName("");
+      setShowAddListModal(false);
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível criar a lista");
+    } finally {
+      setIsAddingList(false);
     }
-
-    addShoppingList(newList)
-    setNewListName('')
-    setShowAddListModal(false)
   }
 
   function handleCancelAddList() {
-    setNewListName('')
-    setShowAddListModal(false)
+    setNewListName("");
+    setShowAddListModal(false);
   }
 
-  function handleOpenList(list: ShoppingList) {
-    navigation.navigate('shoppinglist', { shoppingListId: list.id })
+  function handleOpenList(list: FirebaseShoppingList) {
+    navigation.navigate("shoppinglist", {
+      listName: list.name,
+      shoppingListId: list.id,
+    });
   }
 
-  useEffect(() => {}, [])
+  function handleLogout() {
+    Alert.alert("Sair", "Tem certeza que deseja sair?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Sair", style: "destructive", onPress: logout },
+    ]);
+  }
+
+  useEffect(() => {}, []);
 
   return (
     <>
       <View style={styles.container}>
-        <UserBox userName='Iago' />
-        <Spacing size='lg' />
+        <TouchableOpacity activeOpacity={0.7} onPress={handleLogout}>
+          <UserBox />
+        </TouchableOpacity>
+        <Spacing size="lg" />
         <View style={styles.topContainer}>
           <AppLogo width={50} height={50} />
-          <Text style={styles.title}>Smart{'\n'}ShoppingCart</Text>
+          <Text style={styles.title}>Smart{"\n"}ShoppingCart</Text>
           <Button
             onPress={handleOpenAddListModal}
-            variant='addButton'
-            content={<AddIcon color='white' width={24} height={24} />}
+            variant="addButton"
+            content={<AddIcon color="white" width={24} height={24} />}
           />
         </View>
         <View style={styles.bottomContainer}>
@@ -83,9 +108,9 @@ export function Home({ navigation }: CostumerRoutesProps<'home'>) {
             renderItem={({ item }) => (
               <Button
                 onPress={() => handleOpenList(item)}
-                variant='white'
+                variant="white"
                 content={item.name}
-                color='#2C46B1'
+                color="#2C46B1"
               />
             )}
             ItemSeparatorComponent={() => (
@@ -105,7 +130,7 @@ export function Home({ navigation }: CostumerRoutesProps<'home'>) {
       <Modal
         visible={showAddListModal}
         transparent={true}
-        animationType='fade'
+        animationType="fade"
         onRequestClose={handleCancelAddList}
       >
         <View style={styles.modalOverlay}>
@@ -113,29 +138,31 @@ export function Home({ navigation }: CostumerRoutesProps<'home'>) {
             <Text style={styles.modalTitle}>Nova Lista</Text>
 
             <Input
-              placeholder='Nome da lista'
+              placeholder="Nome da lista"
               value={newListName}
               onChangeText={setNewListName}
             />
 
-            <Spacing size='md' />
+            <Spacing size="md" />
 
             <View style={styles.modalButtons}>
               <Button
                 onPress={handleAddNewList}
-                variant='default'
-                content='Criar Lista'
+                variant="default"
+                content={isAddingList ? "Criando..." : "Criar Lista"}
+                disabled={isAddingList}
               />
-              <Spacing size='sm' />
+              <Spacing size="sm" />
               <Button
                 onPress={handleCancelAddList}
-                variant='white'
-                content='Cancelar'
+                variant="white"
+                content="Cancelar"
+                disabled={isAddingList}
               />
             </View>
           </View>
         </View>
       </Modal>
     </>
-  )
+  );
 }

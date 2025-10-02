@@ -1,130 +1,201 @@
-import { FilterStatus } from '@/@types/filterStatus'
-import { ItemStorage } from '@/storage/itensStorage'
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { FilterStatus } from "@/@types/filterStatus";
+import { ItemStorage } from "@/storage/itensStorage";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
+import {
+  FirebaseService,
+  FirebaseShoppingList,
+  FirebaseItem,
+} from "@/services/firebaseService";
+import { useAuth } from "./AuthContext";
 
 export interface ShoppingList {
-  id: string
-  name: string
-  products: ItemStorage[]
+  id: string;
+  name: string;
+  products: ItemStorage[];
 }
 
 interface ShoppingListContextData {
-  shoppingLists: ShoppingList[]
-  addShoppingList: (newShoppingList: ShoppingList) => void
-  removeShoppingList: (shoppingListId: string) => void
+  shoppingLists: FirebaseShoppingList[];
+  loading: boolean;
+  addShoppingList: (name: string) => Promise<void>;
+  removeShoppingList: (shoppingListId: string) => Promise<void>;
   addProductToShoppingList: (
     shoppingListId: string,
-    newProduct: ItemStorage
-  ) => void
+    productName: string
+  ) => Promise<void>;
   removeProductFromShoppingList: (
     shoppingListId: string,
     productId: string
-  ) => void
-  handleChangeProductStatus: (
+  ) => Promise<void>;
+  toggleProductStatus: (
     shoppingListId: string,
-    productId: string,
+    productId: string
+  ) => Promise<void>;
+  clearShoppingList: (shoppingListId: string) => Promise<void>;
+  getListItems: (listId: string) => Promise<FirebaseItem[]>;
+  getListItemsByStatus: (
+    listId: string,
     status: FilterStatus
-  ) => void
-  handleClearShoppingList: (shoppingListId: string) => void
+  ) => Promise<FirebaseItem[]>;
 }
 
 const ShoppingListContext = createContext<ShoppingListContextData>(
   {} as ShoppingListContextData
-)
+);
 
 interface ShoppingListProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function ShoppingListProvider({ children }: ShoppingListProviderProps) {
-  const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([])
+  const [shoppingLists, setShoppingLists] = useState<FirebaseShoppingList[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+  const { user, isAuthenticated } = useAuth();
 
-  const addShoppingList = (newShoppingList: ShoppingList) => {
-    setShoppingLists((prev) => [...prev, newShoppingList])
-  }
+  // Carregar listas do usuário quando ele fizer login
+  useEffect(() => {
+    if (!isAuthenticated || !user?.uid) {
+      setShoppingLists([]);
+      setLoading(false);
+      return;
+    }
 
-  const removeShoppingList = (shoppingListId: string) => {
-    setShoppingLists(
-      shoppingLists?.filter((list) => list.id !== shoppingListId)
-    )
-  }
+    setLoading(true);
 
-  const addProductToShoppingList = (
+    // Usar o UID real do usuário autenticado
+    const userId = user.uid;
+
+    // Usar listener em tempo real para as listas
+    const unsubscribe = FirebaseService.subscribeToUserLists(
+      userId,
+      (lists) => {
+        setShoppingLists(lists);
+        setLoading(false);
+      }
+    );
+
+    // Cleanup do listener
+    return () => unsubscribe();
+  }, [isAuthenticated, user?.uid]);
+
+  const addShoppingList = async (name: string) => {
+    if (!isAuthenticated || !user?.uid)
+      throw new Error("Usuário não autenticado");
+
+    try {
+      await FirebaseService.createShoppingList(name, user.uid);
+      // O listener atualizará automaticamente a lista
+    } catch (error) {
+      console.error("Erro ao adicionar lista:", error);
+      throw error;
+    }
+  };
+
+  const removeShoppingList = async (shoppingListId: string) => {
+    try {
+      await FirebaseService.deleteShoppingList(shoppingListId);
+      // O listener atualizará automaticamente a lista
+    } catch (error) {
+      console.error("Erro ao remover lista:", error);
+      throw error;
+    }
+  };
+
+  const addProductToShoppingList = async (
     shoppingListId: string,
-    newProduct: ItemStorage
+    productName: string
   ) => {
-    setShoppingLists(
-      shoppingLists.map((list) =>
-        list.id === shoppingListId
-          ? { ...list, products: [...list.products, newProduct] }
-          : list
-      )
-    )
-  }
+    try {
+      await FirebaseService.addItemToList(productName, shoppingListId);
+    } catch (error) {
+      console.error("Erro ao adicionar produto:", error);
+      throw error;
+    }
+  };
 
-  const removeProductFromShoppingList = (
+  const removeProductFromShoppingList = async (
     shoppingListId: string,
     productId: string
   ) => {
-    setShoppingLists(
-      shoppingLists.map((list) =>
-        list.id === shoppingListId
-          ? {
-              ...list,
-              products: list.products.filter(
-                (product) => product.id !== productId
-              ),
-            }
-          : list
-      )
-    )
-  }
+    try {
+      await FirebaseService.deleteItem(productId);
+    } catch (error) {
+      console.error("Erro ao remover produto:", error);
+      throw error;
+    }
+  };
 
-  const handleChangeProductStatus = (
+  const toggleProductStatus = async (
     shoppingListId: string,
-    productId: string,
-    status: FilterStatus
+    productId: string
   ) => {
-    setShoppingLists(
-      shoppingLists.map((list) =>
-        list.id === shoppingListId
-          ? {
-              ...list,
-              products: list.products.map((product) =>
-                product.id === productId ? { ...product, status } : product
-              ),
-            }
-          : list
-      )
-    )
-  }
+    try {
+      await FirebaseService.toggleItemStatus(productId);
+    } catch (error) {
+      console.error("Erro ao alterar status:", error);
+      throw error;
+    }
+  };
 
-  const handleClearShoppingList = (shoppingListId: string) => {
-    setShoppingLists(
-      shoppingLists.map((list) =>
-        list.id === shoppingListId ? { ...list, products: [] } : list
-      )
-    )
-  }
+  const clearShoppingList = async (shoppingListId: string) => {
+    try {
+      await FirebaseService.deleteAllItemsFromList(shoppingListId);
+    } catch (error) {
+      console.error("Erro ao limpar lista:", error);
+      throw error;
+    }
+  };
+
+  const getListItems = async (listId: string): Promise<FirebaseItem[]> => {
+    try {
+      return await FirebaseService.getListItems(listId);
+    } catch (error) {
+      console.error("Erro ao buscar itens:", error);
+      throw error;
+    }
+  };
+
+  const getListItemsByStatus = async (
+    listId: string,
+    status: FilterStatus
+  ): Promise<FirebaseItem[]> => {
+    try {
+      return await FirebaseService.getListItemsByStatus(listId, status);
+    } catch (error) {
+      console.error("Erro ao buscar itens por status:", error);
+      throw error;
+    }
+  };
 
   return (
     <ShoppingListContext.Provider
       value={{
         shoppingLists,
+        loading,
         addShoppingList,
         removeShoppingList,
         addProductToShoppingList,
         removeProductFromShoppingList,
-        handleChangeProductStatus,
-        handleClearShoppingList,
+        toggleProductStatus,
+        clearShoppingList,
+        getListItems,
+        getListItemsByStatus,
       }}
     >
       {children}
     </ShoppingListContext.Provider>
-  )
+  );
 }
 
 export function useShoppingList() {
-  const context = useContext(ShoppingListContext)
-  return context
+  const context = useContext(ShoppingListContext);
+  return context;
 }
