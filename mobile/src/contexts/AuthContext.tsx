@@ -6,106 +6,106 @@ import React, {
   useMemo,
   useState,
   ReactNode,
-} from "react";
+} from 'react'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   User,
-} from "firebase/auth";
-import { auth } from "@/config/firebase";
+} from 'firebase/auth'
+import { auth } from '@/config/firebase'
 
 interface AuthContextData {
-  user: User | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  user: User | null
+  isAuthenticated: boolean
+  loading: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  register: (email: string, password: string) => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextData | undefined>(undefined);
+const AuthContext = createContext<AuthContextData | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
     // Listener inicia apenas após App → AuthProvider estar montado
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser ?? null);
-      setLoading(false);
-    });
+      setUser(nextUser ?? null)
+      setLoading(false)
+    })
 
     // Clean-up no unmount evita leaks
-    return () => unsubscribe();
-  }, []);
+    return () => unsubscribe()
+  }, [])
 
   async function login(email: string, password: string) {
-    setLoading(true);
+    setLoading(true)
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
         password
-      );
-      setUser(userCredential.user);
+      )
+      setUser(userCredential.user)
     } catch (error: any) {
-      console.error("Erro no login:", error);
+      console.error('Erro no login:', error)
       // Evita quebrar se error.code não existir
-      throw new Error(getAuthErrorMessage(error?.code));
+      throw new Error(getAuthErrorMessage(error?.code))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   async function register(email: string, password: string) {
-    setLoading(true);
+    setLoading(true)
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
-      );
-      setUser(userCredential.user);
+      )
+      setUser(userCredential.user)
     } catch (error: any) {
-      console.error("Erro no registro:", error);
-      throw new Error(getAuthErrorMessage(error?.code));
+      console.error('Erro no registro:', error)
+      throw new Error(getAuthErrorMessage(error?.code))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   async function logout() {
-    setLoading(true);
+    setLoading(true)
     try {
-      await signOut(auth);
-      setUser(null);
+      await signOut(auth)
+      setUser(null)
     } catch (error) {
-      console.error("Erro no logout:", error);
-      throw new Error("Não foi possível fazer logout");
+      console.error('Erro no logout:', error)
+      throw new Error('Não foi possível fazer logout')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   function getAuthErrorMessage(errorCode?: string): string {
     switch (errorCode) {
-      case "auth/user-not-found":
-        return "Usuário não encontrado";
-      case "auth/wrong-password":
-        return "Senha incorreta";
-      case "auth/email-already-in-use":
-        return "Este email já está em uso";
-      case "auth/weak-password":
-        return "A senha deve ter pelo menos 6 caracteres";
-      case "auth/invalid-email":
-        return "Email inválido";
-      case "auth/too-many-requests":
-        return "Muitas tentativas. Tente novamente mais tarde";
+      case 'auth/user-not-found':
+        return 'Usuário não encontrado'
+      case 'auth/wrong-password':
+        return 'Senha incorreta'
+      case 'auth/email-already-in-use':
+        return 'Este email já está em uso'
+      case 'auth/weak-password':
+        return 'A senha deve ter pelo menos 6 caracteres'
+      case 'auth/invalid-email':
+        return 'Email inválido'
+      case 'auth/too-many-requests':
+        return 'Muitas tentativas. Tente novamente mais tarde'
       default:
-        return "Erro de autenticação";
+        return 'Erro de autenticação'
     }
   }
 
@@ -119,15 +119,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
     }),
     [user, loading]
-  );
+  )
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
+  const ctx = useContext(AuthContext)
   if (!ctx) {
-    throw new Error("useAuth deve ser usado dentro de AuthProvider");
+    throw new Error('useAuth deve ser usado dentro de AuthProvider')
   }
-  return ctx;
+  return ctx
 }

@@ -31,13 +31,6 @@ target 'RemindMeBuy' do
 
   config = use_native_modules!(config_command)
 
-  # Adicionando os pods do Firebase
-  pod 'Firebase/Core'
-  pod 'Firebase/Auth'
-  pod 'Firebase/Firestore'
-  pod 'Firebase/Storage' # Caso precise usar o Firebase Storage
-  pod 'Firebase/Messaging' # Caso precise usar notificações push
-
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
 

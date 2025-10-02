@@ -1,45 +1,37 @@
-// src/services/firebase.ts
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { initializeAuth } from 'firebase/auth';
-import { getReactNativePersistence } from '@/config/getReactNativePersistence'; // garante que exporta a função correta
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initializeApp } from "firebase/app";
+import { getStorage } from "firebase/storage";
+import { initializeAuth } from "firebase/auth";
+import { initializeFirestore } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getReactNativePersistence } from "./getReactNativePersistence";
 
 /**
  * Atenção: NÃO exponha chaves em produção.
  * Use variáveis de ambiente (dotenv, react-native-config) e não faça commit das chaves.
  */
 const firebaseConfig = {
-  apiKey: 'AIzaSyBacIB4D3AHMjaiRwUqMnQpMq3OuN-nUrg',
-  authDomain: 'smartshoppingcart-f59a8.firebaseapp.com',
-  projectId: 'smartshoppingcart-f59a8',
-  storageBucket: 'smartshoppingcart-f59a8.firebasestorage.app',
-  messagingSenderId: '1062447419900',
-  appId: '1:1062447419900:ios:1d9d47e0c1a4b55e0fa279',
+  apiKey: "AIzaSyDYVIfDZ_kqRMdHrYRHA1l8pA1edZ-jFN0",
+  authDomain: "smartshoppingcart-f59a8.firebaseapp.com",
+  projectId: "smartshoppingcart-f59a8",
+  storageBucket: "smartshoppingcart-f59a8.firebasestorage.app",
+  messagingSenderId: "1062447419900",
+  appId: "1:1062447419900:web:8f9a6c077f89ebbf0fa279",
+  measurementId: "G-86PM5Z8HJX"
 };
 
-// Idempotente: reutiliza app se já existir, senão inicializa
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Initialize Firebase
+const firebase = initializeApp(firebaseConfig);
 
-/**
- * Auth para React Native:
- * - initializeAuth é obrigatório no RN (Hermes)
- * - Persistência com AsyncStorage garante sessão entre reinícios
- * - Chame apenas UMA vez durante todo o ciclo
- */
-export const auth = initializeAuth(app, {
+export const auth = initializeAuth(firebase, {
   persistence: getReactNativePersistence(AsyncStorage),
 });
 
-/**
- * Firestore (SDK Web) funciona bem em RN
- */
-export const db = getFirestore(app);
 
-// Emulador (opcional)
-// import { connectFirestoreEmulator } from 'firebase/firestore';
-// if (__DEV__) {
-//   connectFirestoreEmulator(db, 'localhost', 8080);
-// }
+export const firestoreDb = initializeFirestore(firebase, {
+  experimentalForceLongPolling: true,
+});
 
-export default app;
+
+export const firebaseStorage = getStorage(firebase);
+
+export default firebase;
