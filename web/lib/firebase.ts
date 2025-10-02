@@ -13,13 +13,13 @@ export async function getAnalyticsBrowserSafe(app: import("firebase/app").Fireba
 }
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyDYVIfDZ_kqRMdHrYRHA1l8pA1edZ-jFN0",
+  authDomain: "smartshoppingcart-f59a8.firebaseapp.com",
+  projectId: "smartshoppingcart-f59a8",
+  storageBucket: "smartshoppingcart-f59a8.firebasestorage.app",
+  messagingSenderId: "1062447419900",
+  appId: "1:1062447419900:web:8f9a6c077f89ebbf0fa279",
+  measurementId: "G-86PM5Z8HJX"
 };
 
 // Reusa a mesma instância no client e evita re-inicialização
